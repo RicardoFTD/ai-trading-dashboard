@@ -170,7 +170,7 @@ st.subheader("\U0001F4C8 Last 5 Entries")
 st.dataframe(data.tail().round(2), use_container_width=True)
 
 st.subheader("\U0001F50D AI Sentiment Analysis (Beta)")
-news = requests.get(f"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_VALID_NEWSAPI_KEY").json()
+news = requests.get(f"https://newsapi.org/v2/everything?q={ticker}&apiKey=a8aa81bbbaaf4a308c0c70dafb84e48d").json()
 if 'articles' in news:
     for article in news['articles'][:3]:
         st.write(f"**{article['title']}**")
