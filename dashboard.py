@@ -90,5 +90,101 @@ st.set_page_config(page_title="AI Options Dashboard", layout="wide")
 
 st.title(f"\U0001F4CA AI Stock & Options Dashboard - Welcome {name}")
 
-# NOTE: Pa bliye mete API NewsAPI ou an (ranplase `YOUR_VALID_NEWSAPI_KEY`)
-# NOTE: Mete webhook Telegram ou si ou vle notifikasyon yo fonksyone (ranplase <your-bot-token> ak <your-chat-id>)
+tickers = ['SPY', 'TSLA', 'PLTR', 'META', 'AAPL', 'NVDA', 'AMZN', 'MSFT', 'GOOGL', 'QQQ', 'ARKK', 'XLF', 'DIA', 'TQQQ', 'SOXL', 'BABA', 'SHOP']
+st.sidebar.title("\U0001F4B2 Chwazi Tikè")
+ticker = st.sidebar.selectbox("Chwazi yon stock:", tickers)
+
+st.sidebar.markdown("### Chwazi Dat")
+def_date = datetime.date.today() - datetime.timedelta(days=7)
+start_date = st.sidebar.date_input("Start Date", def_date)
+end_date = st.sidebar.date_input("End Date", datetime.date.today())
+
+data = yf.download(ticker, start=start_date, end=end_date)
+
+if data.empty or 'Close' not in data.columns:
+    st.error("Failed to load data for selected ticker. Please try again later or choose another ticker.")
+    st.stop()
+
+data['RSI'] = data['Close'].rolling(window=14).mean() / data['Close'] * 100
+data['EMA50'] = data['Close'].ewm(span=50, adjust=False).mean()
+data['EMA200'] = data['Close'].ewm(span=200, adjust=False).mean()
+
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.subheader(f"{ticker} Price Chart with RSI")
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(x=data.index,
+                                 open=data['Open'], high=data['High'],
+                                 low=data['Low'], close=data['Close'],
+                                 name='Price'))
+    fig.add_trace(go.Scatter(x=data.index, y=data['EMA50'], name="EMA50", line=dict(color='orange')))
+    fig.add_trace(go.Scatter(x=data.index, y=data['EMA200'], name="EMA200", line=dict(color='blue')))
+    fig.add_trace(go.Scatter(x=data.index, y=data['RSI'], name="RSI", yaxis='y2', line=dict(color='green', dash='dot')))
+    fig.update_layout(xaxis_rangeslider_visible=False)
+    st.plotly_chart(fig, use_container_width=True)
+
+with col2:
+    st.subheader("Latest Snapshot")
+    last_price = data['Close'].iloc[-1] if not data['Close'].empty else None
+    last_rsi = data['RSI'].iloc[-1] if not data['RSI'].empty else 0
+    last_volume = data['Volume'].iloc[-1] if 'Volume' in data.columns and not data['Volume'].empty else 0
+
+    st.metric("Last Price", f"${last_price:.2f}" if last_price else "N/A")
+    st.metric("RSI", f"{last_rsi:.2f}" if last_rsi else "N/A")
+    st.metric("Volume", f"{last_volume:,.0f}" if last_volume else "N/A")
+
+    st.subheader("AI Signal Detector")
+    a_plus = (last_rsi < 30 and data['EMA50'].iloc[-1] > data['EMA200'].iloc[-1]) if isinstance(last_rsi, (int, float)) else False
+    if a_plus:
+        st.success("\u2705 A+ Signal Detected: RSI < 30 and EMA50 > EMA200")
+    else:
+        st.info("\u26A0\uFE0F No A+ signal currently")
+
+    if isinstance(last_rsi, (int, float)):
+        if last_rsi > 70:
+            st.warning("Overbought Zone – Potential PUT signal ⚠️")
+        elif last_rsi < 30:
+            st.success("Oversold Zone – Potential CALL signal ✅")
+        else:
+            st.info("Neutral RSI")
+
+    st.subheader("\U0001F52E Prediksyon Pwoschen Pri")
+    X = np.arange(len(data)).reshape(-1, 1)
+    y = data['Close'].values
+    model = LinearRegression().fit(X, y)
+    predicted_price = model.predict([[len(data)]])[0]
+    st.metric("Predicted Next Close", f"${predicted_price:.2f}" if predicted_price else "N/A")
+
+    if a_plus:
+        try:
+            requests.get("https://api.telegram.org/b<your-bot-token>/sendMessage", params={
+                "chat_id": "<your-chat-id>",
+                "text": f"\u2705 A+ Signal Detected on {ticker}! RSI={last_rsi:.2f} | EMA50>{data['EMA200'].iloc[-1]:.2f}"
+            })
+        except:
+            st.warning("Telegram alert failed (check token or chat_id)")
+
+st.subheader("\U0001F4C8 Last 5 Entries")
+st.dataframe(data.tail().round(2), use_container_width=True)
+
+st.subheader("\U0001F50D AI Sentiment Analysis (Beta)")
+news = requests.get(f"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_VALID_NEWSAPI_KEY").json()
+if 'articles' in news:
+    for article in news['articles'][:3]:
+        st.write(f"**{article['title']}**")
+        st.caption(article['description'])
+else:
+    st.info("Sentiment data unavailable.")
+
+st.subheader("\U0001F4CB Watchlist Overview")
+watchlist_data = {}
+for tk in ['SPY', 'TSLA', 'META', 'PLTR', 'AAPL', 'GOOGL']:
+    df = yf.download(tk, period='5d', interval='1h')
+    rsi = df['Close'].rolling(window=14).mean() / df['Close'] * 100
+    watchlist_data[tk] = rsi.iloc[-1] if not rsi.empty else 0
+
+watch_df = pd.DataFrame.from_dict(watchlist_data, orient='index', columns=['RSI'])
+st.dataframe(watch_df.round(2), use_container_width=True)
+
+st.caption("Powered by WIWI (Ricardo Simon).AI Dashboard")
