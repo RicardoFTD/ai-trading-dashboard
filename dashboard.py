@@ -131,9 +131,18 @@ with col2:
     last_rsi = data['RSI'].iloc[-1] if not data['RSI'].empty else 0
     last_volume = data['Volume'].iloc[-1] if 'Volume' in data.columns and not data['Volume'].empty else 0
 
-    st.metric("Last Price", f"${last_price:.2f}" if last_price is not None and not pd.isna(last_price) else "N/A")
-    st.metric("RSI", f"{last_rsi:.2f}" if last_rsi is not None and not pd.isna(last_rsi) else "N/A")
-    st.metric("Volume", f"{last_volume:,.0f}" if last_volume is not None and not pd.isna(last_volume) else "N/A")
+    try:
+        st.metric("Last Price", f"${last_price:.2f}" if last_price is not None and not pd.isna(last_price) else "N/A")
+    except:
+        st.metric("Last Price", "N/A")
+    try:
+        st.metric("RSI", f"{last_rsi:.2f}" if last_rsi is not None and not pd.isna(last_rsi) else "N/A")
+    except:
+        st.metric("RSI", "N/A")
+    try:
+        st.metric("Volume", f"{last_volume:,.0f}" if last_volume is not None and not pd.isna(last_volume) else "N/A")
+    except:
+        st.metric("Volume", "N/A")
 
     st.subheader("AI Signal Detector")
     a_plus = (last_rsi < 30 and data['EMA50'].iloc[-1] > data['EMA200'].iloc[-1]) if isinstance(last_rsi, (int, float)) else False
