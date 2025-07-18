@@ -51,6 +51,19 @@ else:
 # -------------------------- DASHBOARD CONTENT -------------------------- #
 # Set page title
 st.set_page_config(page_title="AI Options Dashboard", layout="wide")
+st.markdown("""
+    <style>
+    @media screen and (max-width: 768px) {
+        .block-container {
+            padding: 1rem;
+        }
+        .element-container {
+            flex-direction: column !important;
+        }
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title(f"\U0001F4CA AI Stock & Options Dashboard - Welcome {name}")
 
 # Define popular tickers
@@ -154,11 +167,11 @@ with col2:
 
 # Table View
 st.subheader("\U0001F4C8 Last 5 Entries")
-st.dataframe(data.tail().round(2))
+st.dataframe(data.tail().round(2), use_container_width=True)
 
 # Sentiment Mock Section
 st.subheader("\U0001F50D AI Sentiment Analysis (Beta)")
-news = requests.get(f"https://newsapi.org/v2/everything?q={ticker}&apiKey=demo").json()
+news = requests.get(f"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_VALID_NEWSAPI_KEY").json()
 if 'articles' in news:
     for article in news['articles'][:3]:
         st.write(f"**{article['title']}**")
@@ -175,6 +188,6 @@ for tk in ['SPY', 'TSLA', 'META', 'PLTR', 'AAPL', 'GOOGL']:
     watchlist_data[tk] = rsi.iloc[-1] if not rsi.empty else 0
 
 watch_df = pd.DataFrame.from_dict(watchlist_data, orient='index', columns=['RSI'])
-st.dataframe(watch_df.round(2))
+st.dataframe(watch_df.round(2), use_container_width=True)
 
 st.caption("Powered by WIWI (Ricardo Simon).AI Dashboard")
