@@ -130,7 +130,7 @@ with col2:
     last_rsi = data['RSI'].iloc[-1] if not data['RSI'].empty else 0
     last_volume = data['Volume'].iloc[-1] if 'Volume' in data.columns and not data['Volume'].empty else 0
 
-    st.metric("Last Price", f"${last_price:.2f}" if last_price is not None else "N/A")
+    st.metric("Last Price", f"${last_price:.2f}" if last_price is not None and not pd.isna(last_price) else "N/A")
     st.metric("RSI", f"{last_rsi:.2f}" if last_rsi is not None else "N/A")
     st.metric("Volume", f"{last_volume:,.0f}" if last_volume is not None else "N/A")
 
