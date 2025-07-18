@@ -8,8 +8,18 @@ import plotly.graph_objects as go
 from streamlit_authenticator import Authenticate
 import datetime
 import requests
-from sklearn.linear_model import LinearRegression
 import numpy as np
+import smtplib
+import ssl
+from email.message import EmailMessage
+import openai
+
+# Make sure scikit-learn is installed in your environment
+try:
+    from sklearn.linear_model import LinearRegression
+except ModuleNotFoundError:
+    st.error("ModuleNotFoundError: Please install scikit-learn by running `pip install scikit-learn` in your terminal.")
+    st.stop()
 
 # -------------------------- AUTHENTICATION -------------------------- #
 credentials = {
@@ -79,6 +89,7 @@ with col1:
                                  name='Price'))
     fig.add_trace(go.Scatter(x=data.index, y=data['EMA50'], name="EMA50", line=dict(color='orange')))
     fig.add_trace(go.Scatter(x=data.index, y=data['EMA200'], name="EMA200", line=dict(color='blue')))
+    fig.add_trace(go.Scatter(x=data.index, y=data['RSI'], name="RSI", yaxis='y2', line=dict(color='green', dash='dot')))
     fig.update_layout(xaxis_rangeslider_visible=False)
     st.plotly_chart(fig, use_container_width=True)
 
@@ -123,6 +134,16 @@ with col2:
     predicted_price = model.predict([[len(data)]])[0]
     st.metric("Predicted Next Close", f"${predicted_price:.2f}")
 
+    # Telegram Alert for A+ signal
+    if a_plus:
+        try:
+            requests.get("https://api.telegram.org/b<your-bot-token>/sendMessage", params={
+                "chat_id": "<your-chat-id>",
+                "text": f"\u2705 A+ Signal Detected on {ticker}! RSI={last_rsi:.2f} | EMA50>{data['EMA200'].iloc[-1]:.2f}"
+            })
+        except:
+            st.warning("Telegram alert failed (check token or chat_id)")
+
 # Table View
 st.subheader("\U0001F4C8 Last 5 Entries")
 st.dataframe(data.tail().round(2))
@@ -140,7 +161,7 @@ else:
 # Watchlist quick view
 st.subheader("\U0001F4CB Watchlist Overview")
 watchlist_data = {}
-for tk in ['SPY', 'TSLA', 'META']:
+for tk in ['SPY', 'TSLA', 'META', 'PLTR', 'AAPL', 'GOOGL']:
     df = yf.download(tk, period='5d', interval='1h')
     rsi = df['Close'].rolling(window=14).mean() / df['Close'] * 100
     watchlist_data[tk] = rsi.iloc[-1] if not rsi.empty else 0
