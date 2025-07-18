@@ -169,12 +169,24 @@ with col2:
 st.subheader("\U0001F4C8 Last 5 Entries")
 st.dataframe(data.tail().round(2), use_container_width=True)
 
-st.subheader("\U0001F50D AI Sentiment Analysis (Beta)")
+st.subheader("\U0001F50D AI Sentiment Analysis (GPT-4)")
 news = requests.get(f"https://newsapi.org/v2/everything?q={ticker}&apiKey=a8aa81bbbaaf4a308c0c70dafb84e48d").json()
 if 'articles' in news:
     for article in news['articles'][:3]:
         st.write(f"**{article['title']}**")
         st.caption(article['description'])
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a financial analyst. Summarize the sentiment of the news headline and give a brief impact on the stock."},
+                    {"role": "user", "content": article['title'] + "\n" + article['description']}
+                ]
+            )
+            sentiment_summary = response['choices'][0]['message']['content']
+            st.info(sentiment_summary)
+        except Exception as e:
+            st.warning("OpenAI sentiment analysis failed")
 else:
     st.info("Sentiment data unavailable.")
 
