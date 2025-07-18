@@ -164,7 +164,10 @@ with col2:
     y = data['Close'].values
     model = LinearRegression().fit(X, y)
     predicted_price = model.predict([[len(data)]])[0]
-    st.metric("Predicted Next Close", f"${predicted_price:.2f}" if predicted_price else "N/A")
+    try:
+        st.metric("Predicted Next Close", f"${predicted_price:.2f}" if predicted_price is not None and not pd.isna(predicted_price) else "N/A")
+    except:
+        st.metric("Predicted Next Close", "N/A")
 
     if a_plus:
         try:
