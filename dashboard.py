@@ -7,6 +7,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from streamlit_authenticator import Authenticate
 import datetime
+import requests
 
 # -------------------------- AUTHENTICATION -------------------------- #
 credentials = {
@@ -91,7 +92,11 @@ with col2:
         st.metric("Last Price", "N/A")
 
     st.metric("RSI", f"{last_rsi:.2f}")
-    st.metric("Volume", f"{last_volume:,.0f}")
+
+    if isinstance(last_volume, (int, float)):
+        st.metric("Volume", f"{last_volume:,.0f}")
+    else:
+        st.metric("Volume", "N/A")
 
     # AI Signal A+
     st.subheader("AI Signal Detector")
@@ -114,7 +119,13 @@ st.dataframe(data.tail().round(2))
 
 # Sentiment Mock Section
 st.subheader("🔍 AI Sentiment Analysis (Beta)")
-st.info("🧠 AI model detects positive options flow sentiment on TSLA and META. Watch for call volume increase above $X strike this week.")
+news = requests.get(f"https://newsapi.org/v2/everything?q={ticker}&apiKey=demo").json()
+if 'articles' in news:
+    for article in news['articles'][:3]:
+        st.write(f"**{article['title']}**")
+        st.caption(article['description'])
+else:
+    st.info("Sentiment data unavailable.")
 
 # Watchlist quick view
 st.subheader("📋 Watchlist Overview")
