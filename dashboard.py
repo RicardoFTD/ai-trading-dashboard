@@ -166,25 +166,6 @@ with col2:
         except:
             st.warning("Telegram alert failed (check token or chat_id)")
 
-    # ------------------- Optional Email Alert ------------------- #
-    # try:
-    #     email_sender = 'your_email@gmail.com'
-    #     email_password = 'your_app_password'
-    #     email_receiver = 'to_email@gmail.com'
-    #     subject = f"A+ Signal on {ticker}"
-    #     body = f"Signal: RSI={last_rsi:.2f}, EMA50>{data['EMA200'].iloc[-1]:.2f}"
-    #     em = EmailMessage()
-    #     em['From'] = email_sender
-    #     em['To'] = email_receiver
-    #     em['Subject'] = subject
-    #     em.set_content(body)
-    #     context = ssl.create_default_context()
-    #     with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-    #         smtp.login(email_sender, email_password)
-    #         smtp.sendmail(email_sender, email_receiver, em.as_string())
-    # except:
-    #     st.warning("Email alert failed")
-
 st.subheader("\U0001F4C8 Last 5 Entries")
 st.dataframe(data.tail().round(2), use_container_width=True)
 
