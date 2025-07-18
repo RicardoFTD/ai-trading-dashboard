@@ -81,11 +81,15 @@ with col1:
 
 with col2:
     st.subheader("Latest Snapshot")
-    last_price = data['Close'].iloc[-1] if not data['Close'].empty else 0
+    last_price = data['Close'].iloc[-1] if not data['Close'].empty else None
     last_rsi = data['RSI'].iloc[-1] if not data['RSI'].empty else 0
     last_volume = data['Volume'].iloc[-1] if 'Volume' in data.columns and not data['Volume'].empty else 0
 
-    st.metric("Last Price", f"${last_price:.2f}")
+    if isinstance(last_price, (int, float)):
+        st.metric("Last Price", f"${last_price:.2f}")
+    else:
+        st.metric("Last Price", "N/A")
+
     st.metric("RSI", f"{last_rsi:.2f}")
     st.metric("Volume", f"{last_volume:,.0f}")
 
