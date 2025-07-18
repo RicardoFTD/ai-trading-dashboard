@@ -132,8 +132,8 @@ with col2:
     last_volume = data['Volume'].iloc[-1] if 'Volume' in data.columns and not data['Volume'].empty else 0
 
     st.metric("Last Price", f"${last_price:.2f}" if last_price is not None and not pd.isna(last_price) else "N/A")
-    st.metric("RSI", f"{last_rsi:.2f}" if last_rsi is not None else "N/A")
-    st.metric("Volume", f"{last_volume:,.0f}" if last_volume is not None else "N/A")
+    st.metric("RSI", f"{last_rsi:.2f}" if last_rsi is not None and not pd.isna(last_rsi) else "N/A")
+    st.metric("Volume", f"{last_volume:,.0f}" if last_volume is not None and not pd.isna(last_volume) else "N/A")
 
     st.subheader("AI Signal Detector")
     a_plus = (last_rsi < 30 and data['EMA50'].iloc[-1] > data['EMA200'].iloc[-1]) if isinstance(last_rsi, (int, float)) else False
@@ -182,8 +182,11 @@ st.subheader("\U0001F4CB Watchlist Overview")
 watchlist_data = {}
 for tk in ['SPY', 'TSLA', 'META', 'PLTR', 'AAPL', 'GOOGL']:
     df = yf.download(tk, period='5d', interval='1h')
-    rsi = df['Close'].rolling(window=14).mean() / df['Close'] * 100
-    watchlist_data[tk] = rsi.iloc[-1] if not rsi.empty else 0
+    if not df.empty and 'Close' in df.columns:
+        rsi = df['Close'].rolling(window=14).mean() / df['Close'] * 100
+        watchlist_data[tk] = rsi.iloc[-1] if not rsi.empty else 0
+    else:
+        watchlist_data[tk] = 0
 
 watch_df = pd.DataFrame.from_dict(watchlist_data, orient='index', columns=['RSI'])
 st.dataframe(watch_df.round(2), use_container_width=True)
