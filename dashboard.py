@@ -138,4 +138,4 @@ for tk in ['SPY', 'TSLA', 'META']:
 watch_df = pd.DataFrame.from_dict(watchlist_data, orient='index', columns=['RSI'])
 st.dataframe(watch_df.round(2))
 
-st.caption("Powered by yFinance • R. Simon AI Dashboard")
+st.caption("Powered WIWI (Ricardo) • R. Simon AI Dashboard")
