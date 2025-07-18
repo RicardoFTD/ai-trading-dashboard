@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 from streamlit_authenticator import Authenticate
 import datetime
 import requests
+from sklearn.linear_model import LinearRegression
+import numpy as np
 
 # -------------------------- AUTHENTICATION -------------------------- #
 credentials = {
@@ -39,15 +41,15 @@ else:
 # -------------------------- DASHBOARD CONTENT -------------------------- #
 # Set page title
 st.set_page_config(page_title="AI Options Dashboard", layout="wide")
-st.title(f"📊 AI Stock & Options Dashboard - Welcome {name}")
+st.title(f"\U0001F4CA AI Stock & Options Dashboard - Welcome {name}")
 
 # Define popular tickers
-tickers = ['SPY', 'TSLA', 'PLTR', 'META', 'AAPL', 'NVDA', 'AMZN', 'MSFT', 'GOOGL', 'QQQ']
-st.sidebar.title("Select Ticker")
-ticker = st.sidebar.selectbox("Choose a stock:", tickers)
+tickers = ['SPY', 'TSLA', 'PLTR', 'META', 'AAPL', 'NVDA', 'AMZN', 'MSFT', 'GOOGL', 'QQQ', 'ARKK', 'XLF', 'DIA', 'TQQQ', 'SOXL', 'BABA', 'SHOP']
+st.sidebar.title("\U0001F4B2 Chwazi Tikè")
+ticker = st.sidebar.selectbox("Chwazi yon stock:", tickers)
 
 # Add start and end date inputs
-st.sidebar.markdown("### Select Date Range")
+st.sidebar.markdown("### Chwazi Dat")
 def_date = datetime.date.today() - datetime.timedelta(days=7)
 start_date = st.sidebar.date_input("Start Date", def_date)
 end_date = st.sidebar.date_input("End Date", datetime.date.today())
@@ -102,9 +104,9 @@ with col2:
     st.subheader("AI Signal Detector")
     a_plus = (last_rsi < 30 and data['EMA50'].iloc[-1] > data['EMA200'].iloc[-1])
     if a_plus:
-        st.success("✅ A+ Signal Detected: RSI < 30 and EMA50 > EMA200")
+        st.success("\u2705 A+ Signal Detected: RSI < 30 and EMA50 > EMA200")
     else:
-        st.info("⚠️ No A+ signal currently")
+        st.info("\u26A0\uFE0F No A+ signal currently")
 
     if last_rsi > 70:
         st.warning("Overbought Zone – Potential PUT signal ⚠️")
@@ -113,12 +115,20 @@ with col2:
     else:
         st.info("Neutral RSI")
 
+    # Prediction using Linear Regression
+    st.subheader("\U0001F52E Prediksyon Pwoschen Pri")
+    X = np.arange(len(data)).reshape(-1, 1)
+    y = data['Close'].values
+    model = LinearRegression().fit(X, y)
+    predicted_price = model.predict([[len(data)]])[0]
+    st.metric("Predicted Next Close", f"${predicted_price:.2f}")
+
 # Table View
-st.subheader("📈 Last 5 Entries")
+st.subheader("\U0001F4C8 Last 5 Entries")
 st.dataframe(data.tail().round(2))
 
 # Sentiment Mock Section
-st.subheader("🔍 AI Sentiment Analysis (Beta)")
+st.subheader("\U0001F50D AI Sentiment Analysis (Beta)")
 news = requests.get(f"https://newsapi.org/v2/everything?q={ticker}&apiKey=demo").json()
 if 'articles' in news:
     for article in news['articles'][:3]:
@@ -128,7 +138,7 @@ else:
     st.info("Sentiment data unavailable.")
 
 # Watchlist quick view
-st.subheader("📋 Watchlist Overview")
+st.subheader("\U0001F4CB Watchlist Overview")
 watchlist_data = {}
 for tk in ['SPY', 'TSLA', 'META']:
     df = yf.download(tk, period='5d', interval='1h')
@@ -138,4 +148,4 @@ for tk in ['SPY', 'TSLA', 'META']:
 watch_df = pd.DataFrame.from_dict(watchlist_data, orient='index', columns=['RSI'])
 st.dataframe(watch_df.round(2))
 
-st.caption("Powered by yFinance • R. Simon AI Dashboard")
+st.caption("Powered by WIWI (Ricardo Simon).AI Dashboard")
