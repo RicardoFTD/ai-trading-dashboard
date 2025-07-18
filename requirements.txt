@@ -1,0 +1,9 @@
+streamlit
+yfinance
+pandas
+plotly
+numpy
+requests
+scikit-learn
+streamlit-authenticator
+openai
